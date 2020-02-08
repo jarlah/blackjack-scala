@@ -44,8 +44,8 @@ object Deck {
       rank <- List(King, Queen, Jack, Ten, Nine, Eight, Seven, Six, Five, Four, Three, Two, Ace)
     } yield Card(suit, rank)
 
-  def shuffle(random: Random): Deck =
-    Deck(random.shuffle(allCards))
+  def shuffle(shuffle: Seq[Card] => Seq[Card]): Deck =
+    Deck(shuffle(allCards))
 }
 
 case class Hand(cards: Seq[Card]) {
@@ -84,14 +84,15 @@ case class GameState(userCredit: Int) {
 object Game extends App {
   val continue = () => "y".equals(getAnswer("Do you wan to continue", List("y", "n")))
   val stand = () => "s".equals(getAnswer("Hit or Stand", List("h", "s")))
+  val randomShuffle = (cards: Seq[Card]) => Random.shuffle(cards)
 
   println("Welcome to BlackJack. Press any key to start playing.")
   readLine("")
-  gameLoop(GameState(100), new Random(), continue, stand)
+  gameLoop(GameState(100), randomShuffle, continue, stand)
 
   @tailrec
-  def gameLoop(gameState: GameState, random: Random, shouldContinue: () => Boolean, shouldStand: () => Boolean): Unit = {
-    val deck = Deck.shuffle(random)
+  def gameLoop(gameState: GameState, shuffleFn: Seq[Card] => Seq[Card], shouldContinue: () => Boolean, shouldStand: () => Boolean): Unit = {
+    val deck = Deck.shuffle(shuffleFn)
     val bet = readInt(s"Please enter bet (credit: ${gameState.userCredit}): ")
     val (playerHand, dealerHand, modifiedDeck) = Dealer.dealHands(deck)
     val playerWon = roundLoop(playerHand, dealerHand, modifiedDeck, stand = false, shouldStand)
@@ -100,7 +101,7 @@ object Game extends App {
     println(s"Start-Credit: [ ${gameState.userCredit} ],  End-Credit: [ ${newState.userCredit} ]")
     println()
     if (newState.moneyLeft && shouldContinue()) {
-      gameLoop(newState, random, shouldContinue, shouldStand)
+      gameLoop(newState, shuffleFn, shouldContinue, shouldStand)
     } else if (!newState.moneyLeft)
       println("You have no money left")
     else
