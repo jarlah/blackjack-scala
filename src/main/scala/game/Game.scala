@@ -11,7 +11,6 @@ case object Club extends Suit
 
 sealed abstract class Rank(val value: Int) {
   val isAce: Boolean = this == Ace
-  val specialValue: Int = if (isAce) value + 10 else value
 }
 case object King extends Rank(10)
 case object Queen extends Rank(10)
@@ -59,7 +58,8 @@ case class Hand(cards: Seq[Card]) {
   val bestValue: Int =  List(value, specialValue).filter(_ <= winningValue).maxOption.getOrElse(0)
   def winsOver(otherHand: Hand): Boolean = bestValue > otherHand.bestValue
   def showCards (dealer: Boolean = false): String =
-    if (dealer) s"${cards.headOption.map(_.rank.value.toString).getOrElse("")} X" else cards.map(c => c.rank.value) mkString ", "
+    if (dealer) s"${cards.head.rank.value} X"
+    else cards.map(c => c.rank.value).mkString(", ")
   def addCard(card: Card): Hand = copy(cards = cards :+ card)
 }
 
@@ -83,12 +83,13 @@ case class GameState(userCredit: Int) {
 
 object Game extends App {
 
+  println("Welcome to BlackJack. Press any key to start playing.")
+  readLine("")
+
   gameLoop(GameState(100), new Random())
 
   @tailrec
   def gameLoop(gameState: GameState, random: Random): Unit = {
-    println("Welcome to BlackJack. Press any key to start playing.")
-    readLine("")
     val deck = Deck.shuffle(random)
     val bet = readInt(s"Please enter bet (credit: ${gameState.userCredit}): ")
     val (playerHand, dealerHand, modifiedDeck) = Dealer.dealHands(deck)
@@ -105,26 +106,16 @@ object Game extends App {
       println("Exiting")
   }
 
-  def showCards(playerHand: Hand, dealerHand: Hand, dealer: Boolean = true): Unit = {
-    println(s"Dealer hand: ${dealerHand.showCards(dealer)}")
-    println(s"Player hand: ${playerHand.showCards()}")
-  }
-
   @tailrec
   def hitOrStand(playerHand: Hand, dealerHand: Hand, deck: Deck, stand: Boolean): Boolean = {
-    if (playerHand.isBust) {
-      println(s"*** You lose! ***")
-      showCards(playerHand, dealerHand, dealer = false)
-      false
-    } else if (stand) {
+    val summary = roundSummary(playerHand, dealerHand)(_)
+    if (playerHand.isBust) { // player as hit and is bust
+      summary(false)
+    } else if (stand) { // player is standing
       if (dealerHand.isBust || playerHand.winsOver(dealerHand)) {
-        println(s"*** You win! ***")
-        showCards(playerHand, dealerHand, dealer = false)
-        true
+        summary(true)
       } else {
-        println(s"*** You lose! ***")
-        showCards(playerHand, dealerHand, dealer = false)
-        false
+        summary(false)
       }
     } else {
       var newDeck = deck
@@ -148,6 +139,17 @@ object Game extends App {
       }
       hitOrStand(newPlayerHand, newDealerHand, newDeck, newStand)
     }
+  }
+
+  def showCards(playerHand: Hand, dealerHand: Hand, dealer: Boolean = true): Unit = {
+    println(s"Dealer hand: ${dealerHand.showCards(dealer)}")
+    println(s"Player hand: ${playerHand.showCards()}")
+  }
+
+  def roundSummary(player: Hand, dealer: Hand)(won: Boolean): Boolean = {
+    println(s"*** You ${if (won) "win" else "lose!"} ***")
+    showCards(player, dealer, dealer = false)
+    won
   }
 
   def getHitOrStand: String = {
