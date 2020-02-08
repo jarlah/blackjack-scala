@@ -112,11 +112,7 @@ object Game extends App {
     if (playerHand.isBust) { // player has hit and is bust
       summary(false)
     } else if (stand) { // player is standing
-      if (dealerHand.isBust || playerHand.winsOver(dealerHand)) {
-        summary(true)
-      } else {
-        summary(false)
-      }
+      summary(dealerHand.isBust || playerHand.winsOver(dealerHand))
     } else {
       val (newPlayerHand, newDealerHand, newDeck, newStand) =
         hitOrStand(playerHand, dealerHand, deck)
