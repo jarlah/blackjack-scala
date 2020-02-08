@@ -106,11 +106,10 @@ object Game extends App {
 
   @tailrec
   def roundLoop(playerHand: Hand, dealerHand: Hand, deck: Deck, stand: Boolean, shouldStand: () => Boolean): Boolean = {
-    val summary = roundSummary(playerHand, dealerHand)(_)
     if (playerHand.isBust) { // player has hit and is bust
-      summary(false)
+      roundSummary(playerHand, dealerHand, won = false)
     } else if (stand) { // player is standing
-      summary(dealerHand.isBust || playerHand.winsOver(dealerHand))
+      roundSummary(playerHand, dealerHand, dealerHand.isBust || playerHand.winsOver(dealerHand))
     } else {
       val (newPlayerHand, newDealerHand, newDeck, newStand) =
         hitOrStand(playerHand, dealerHand, deck, shouldStand)
@@ -146,7 +145,7 @@ object Game extends App {
     println(s"Player hand: ${playerHand.showCards()}")
   }
 
-  def roundSummary(player: Hand, dealer: Hand)(won: Boolean): Boolean = {
+  def roundSummary(player: Hand, dealer: Hand, won: Boolean): Boolean = {
     println(s"*** You ${if (won) "win" else "lose!"} ***")
     showCards(player, dealer, dealer = false)
     won
