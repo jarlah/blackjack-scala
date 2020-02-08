@@ -31,7 +31,7 @@ case class Deck(cards: Seq[Card]) {
   // Therefore we use cards.head instead of cards.headOption
   def dealCard: (Card, Deck) = {
     val topCard = cards.head
-    (topCard, copy(cards.filter(_ != topCard)))
+    (topCard, copy(cards.tail))
   }
 }
 
@@ -71,9 +71,7 @@ object Dealer {
   }
 }
 
-case class GameState(userCredit: Int) {
-  val moneyLeft: Boolean = userCredit > 0
-}
+case class GameState(credit: Int)
 
 object Game extends App {
   val continue = () => "y".equals(getAnswer("Do you wan to continue", List("y", "n")))
@@ -93,16 +91,16 @@ object Game extends App {
   @tailrec
   def gameLoop(gameState: GameState, shuffleFn: Seq[Card] => Seq[Card], bidSupplier: Int => Int, shouldContinue: () => Boolean, shouldStand: () => Boolean): Unit = {
     val deck = Deck.shuffle(shuffleFn)
-    val bet = bidSupplier.apply(gameState.userCredit)
+    val bet = bidSupplier.apply(gameState.credit)
     val (playerHand, dealerHand, modifiedDeck) = Dealer.dealHands(deck)
     val playerWon = roundLoop(playerHand, dealerHand, modifiedDeck, stand = false, shouldStand)
-    val newState = gameState.copy(userCredit = gameState.userCredit + (if (playerWon) bet else -bet))
+    val newState = gameState.copy(credit = gameState.credit + (if (playerWon) bet else -bet))
     println(s"======= Game Summary =======")
-    println(s"Start-Credit: [ ${gameState.userCredit} ],  End-Credit: [ ${newState.userCredit} ]")
+    println(s"Start-Credit: [ ${gameState.credit} ],  End-Credit: [ ${newState.credit} ]")
     println()
-    if (newState.moneyLeft && shouldContinue()) {
+    if (newState.credit > 0 && shouldContinue()) {
       gameLoop(newState, shuffleFn, bidSupplier, shouldContinue, shouldStand)
-    } else if (!newState.moneyLeft)
+    } else if (newState.credit <= 0)
       println("You have no money left")
     else
       println("Exiting")
