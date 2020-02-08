@@ -82,28 +82,25 @@ case class GameState(userCredit: Int) {
 }
 
 object Game extends App {
-
-  println("Welcome to BlackJack. Press any key to start playing.")
-  readLine("")
-
   val continue = () => "y".equals(getAnswer("Do you wan to continue", List("y", "n")))
   val stand = () => "s".equals(getAnswer("Hit or Stand", List("h", "s")))
 
+  println("Welcome to BlackJack. Press any key to start playing.")
+  readLine("")
   gameLoop(GameState(100), new Random(), continue, stand)
 
-
   @tailrec
-  def gameLoop(gameState: GameState, random: Random, continueFn: () => Boolean, standFn: () => Boolean): Unit = {
+  def gameLoop(gameState: GameState, random: Random, shouldContinue: () => Boolean, shouldStand: () => Boolean): Unit = {
     val deck = Deck.shuffle(random)
     val bet = readInt(s"Please enter bet (credit: ${gameState.userCredit}): ")
     val (playerHand, dealerHand, modifiedDeck) = Dealer.dealHands(deck)
-    val playerWon = roundLoop(playerHand, dealerHand, modifiedDeck, stand = false, standFn)
+    val playerWon = roundLoop(playerHand, dealerHand, modifiedDeck, stand = false, shouldStand)
     val newState = gameState.copy(userCredit = gameState.userCredit + (if (playerWon) bet else -bet))
     println(s"======= Game Summary =======")
     println(s"Start-Credit: [ ${gameState.userCredit} ],  End-Credit: [ ${newState.userCredit} ]")
     println()
-    if (newState.moneyLeft && continueFn()) {
-      gameLoop(newState, random, continueFn, standFn)
+    if (newState.moneyLeft && shouldContinue()) {
+      gameLoop(newState, random, shouldContinue, shouldStand)
     } else if (!newState.moneyLeft)
       println("You have no money left")
     else
