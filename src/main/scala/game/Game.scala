@@ -86,20 +86,24 @@ object Game extends App {
   println("Welcome to BlackJack. Press any key to start playing.")
   readLine("")
 
-  gameLoop(GameState(100), new Random())
+  val continue = () => "y".equals(getAnswer("Do you wan to continue", List("y", "n")))
+  val stand = () => "s".equals(getAnswer("Hit or Stand", List("h", "s")))
+
+  gameLoop(GameState(100), new Random(), continue, stand)
+
 
   @tailrec
-  def gameLoop(gameState: GameState, random: Random): Unit = {
+  def gameLoop(gameState: GameState, random: Random, continueFn: () => Boolean, standFn: () => Boolean): Unit = {
     val deck = Deck.shuffle(random)
     val bet = readInt(s"Please enter bet (credit: ${gameState.userCredit}): ")
     val (playerHand, dealerHand, modifiedDeck) = Dealer.dealHands(deck)
-    val playerWon = roundLoop(playerHand, dealerHand, modifiedDeck, stand = false)
+    val playerWon = roundLoop(playerHand, dealerHand, modifiedDeck, stand = false, standFn)
     val newState = gameState.copy(userCredit = gameState.userCredit + (if (playerWon) bet else -bet))
     println(s"======= Game Summary =======")
     println(s"Start-Credit: [ ${gameState.userCredit} ],  End-Credit: [ ${newState.userCredit} ]")
     println()
-    if (newState.moneyLeft && "y".equals(getAnswer("Do you wan to continue", List("y", "n")))) {
-      gameLoop(newState, random)
+    if (newState.moneyLeft && continueFn()) {
+      gameLoop(newState, random, continueFn, standFn)
     } else if (!newState.moneyLeft)
       println("You have no money left")
     else
@@ -107,7 +111,7 @@ object Game extends App {
   }
 
   @tailrec
-  def roundLoop(playerHand: Hand, dealerHand: Hand, deck: Deck, stand: Boolean): Boolean = {
+  def roundLoop(playerHand: Hand, dealerHand: Hand, deck: Deck, stand: Boolean, shouldStand: () => Boolean): Boolean = {
     val summary = roundSummary(playerHand, dealerHand)(_)
     if (playerHand.isBust) { // player has hit and is bust
       summary(false)
@@ -115,18 +119,18 @@ object Game extends App {
       summary(dealerHand.isBust || playerHand.winsOver(dealerHand))
     } else {
       val (newPlayerHand, newDealerHand, newDeck, newStand) =
-        hitOrStand(playerHand, dealerHand, deck)
-      roundLoop(newPlayerHand, newDealerHand, newDeck, newStand)
+        hitOrStand(playerHand, dealerHand, deck, shouldStand)
+      roundLoop(newPlayerHand, newDealerHand, newDeck, newStand, shouldStand)
     }
   }
 
-  def hitOrStand(playerHand: Hand, dealerHand: Hand, deck: Deck): (Hand, Hand, Deck, Boolean) = {
+  def hitOrStand(playerHand: Hand, dealerHand: Hand, deck: Deck, shouldStand: () => Boolean): (Hand, Hand, Deck, Boolean) = {
     var currentDeck = deck
     var currentDealerHand = dealerHand
     var currentPlayerHand = playerHand
     var currentStand = false
     showCards(playerHand, dealerHand)
-    if ("s".equals(getAnswer("Hit or Stand", List("h", "s")))) {
+    if (shouldStand()) {
       currentStand = true
       while (currentDealerHand.value < 17) {
         currentDeck.dealCard match {
