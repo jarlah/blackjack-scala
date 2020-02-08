@@ -9,6 +9,11 @@ package object game {
     scala.io.StdIn.readLine()
   }
 
-  def continue(msg: String): Boolean =
-    readLine(msg).toLowerCase.toList.headOption.map(_.toLower).contains('y')
+  def getAnswer(question: String, possibleAnswers: List[String]): String = {
+    var input = ""
+    while (!possibleAnswers.contains(input)) {
+      input = readLine(s"$question? Enter one of (${possibleAnswers.mkString(",")}): ").toLowerCase
+    }
+    input
+  }
 }

@@ -98,7 +98,7 @@ object Game extends App {
     println(s"======= Game Summary =======")
     println(s"Start-Credit: [ ${gameState.userCredit} ],  End-Credit: [ ${newState.userCredit} ]")
     println()
-    if (newState.moneyLeft && continue("Do you want to continue? ")) {
+    if (newState.moneyLeft && "y".equals(getAnswer("Do you wan to continue", List("y", "n")))) {
       gameLoop(newState, random)
     } else if (!newState.moneyLeft)
       println("You have no money left")
@@ -126,7 +126,7 @@ object Game extends App {
     var newPlayerHand = playerHand
     var newStand = false
     showCards(playerHand, dealerHand)
-    if ("s".equals(getHitOrStand)) {
+    if ("s".equals(getAnswer("Hit or Stand", List("h", "s")))) {
       newStand = true
       while (newDealerHand.value < 17) {
         newDeck.dealCard match {
@@ -152,14 +152,5 @@ object Game extends App {
     println(s"*** You ${if (won) "win" else "lose!"} ***")
     showCards(player, dealer, dealer = false)
     won
-  }
-
-  def getHitOrStand: String = {
-    var input = ""
-    // Loop till user enters either "s" or "h"
-    while (!List("s", "h").contains(input)) {
-      input = readLine("Hit or Stand? Enter one of (H,h,S,s): ").toLowerCase
-    }
-    input
   }
 }
