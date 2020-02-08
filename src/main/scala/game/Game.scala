@@ -93,7 +93,7 @@ object Game extends App {
     val deck = Deck.shuffle(random)
     val bet = readInt(s"Please enter bet (credit: ${gameState.userCredit}): ")
     val (playerHand, dealerHand, modifiedDeck) = Dealer.dealHands(deck)
-    val playerWon = hitOrStand(playerHand, dealerHand, modifiedDeck, stand = false)
+    val playerWon = roundLoop(playerHand, dealerHand, modifiedDeck, stand = false)
     val newState = gameState.copy(userCredit = gameState.userCredit + (if (playerWon) bet else -bet))
     println(s"======= Game Summary =======")
     println(s"Start-Credit: [ ${gameState.userCredit} ],  End-Credit: [ ${newState.userCredit} ]")
@@ -107,7 +107,7 @@ object Game extends App {
   }
 
   @tailrec
-  def hitOrStand(playerHand: Hand, dealerHand: Hand, deck: Deck, stand: Boolean): Boolean = {
+  def roundLoop(playerHand: Hand, dealerHand: Hand, deck: Deck, stand: Boolean): Boolean = {
     val summary = roundSummary(playerHand, dealerHand)(_)
     if (playerHand.isBust) { // player as hit and is bust
       summary(false)
@@ -118,27 +118,33 @@ object Game extends App {
         summary(false)
       }
     } else {
-      var newDeck = deck
-      var newDealerHand = dealerHand
-      var newPlayerHand = playerHand
-      var newStand = stand
-      showCards(playerHand, dealerHand)
-      if ("s".equals(getHitOrStand)) {
-        newStand = true
-        while (newDealerHand.value < 17) {
-          newDeck.dealCard match {
-            case (card, modifiedDeck) =>
-              newDealerHand = newDealerHand.addCard(card)
-              newDeck = modifiedDeck
-          }
-        }
-      } else {
-        val (card, modifiedDeck) = deck.dealCard
-        newPlayerHand = newPlayerHand.addCard(card)
-        newDeck = modifiedDeck
-      }
-      hitOrStand(newPlayerHand, newDealerHand, newDeck, newStand)
+      val (newPlayerHand, newDealerHand, newDeck, newStand) =
+        hitOrStand(playerHand, dealerHand, deck)
+      roundLoop(newPlayerHand, newDealerHand, newDeck, newStand)
     }
+  }
+
+  def hitOrStand(playerHand: Hand, dealerHand: Hand, deck: Deck): (Hand, Hand, Deck, Boolean) = {
+    var newDeck = deck
+    var newDealerHand = dealerHand
+    var newPlayerHand = playerHand
+    var newStand = false
+    showCards(playerHand, dealerHand)
+    if ("s".equals(getHitOrStand)) {
+      newStand = true
+      while (newDealerHand.value < 17) {
+        newDeck.dealCard match {
+          case (card, modifiedDeck) =>
+            newDealerHand = newDealerHand.addCard(card)
+            newDeck = modifiedDeck
+        }
+      }
+    } else {
+      val (card, modifiedDeck) = newDeck.dealCard
+      newPlayerHand = newPlayerHand.addCard(card)
+      newDeck = modifiedDeck
+    }
+    (newPlayerHand, newDealerHand, newDeck, newStand)
   }
 
   def showCards(playerHand: Hand, dealerHand: Hand, dealer: Boolean = true): Unit = {
