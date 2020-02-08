@@ -109,7 +109,7 @@ object Game extends App {
   @tailrec
   def roundLoop(playerHand: Hand, dealerHand: Hand, deck: Deck, stand: Boolean): Boolean = {
     val summary = roundSummary(playerHand, dealerHand)(_)
-    if (playerHand.isBust) { // player as hit and is bust
+    if (playerHand.isBust) { // player has hit and is bust
       summary(false)
     } else if (stand) { // player is standing
       if (dealerHand.isBust || playerHand.winsOver(dealerHand)) {
