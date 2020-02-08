@@ -9,9 +9,7 @@ case object Diamond extends Suit
 case object Spade extends Suit
 case object Club extends Suit
 
-sealed abstract class Rank(val value: Int) {
-  val isAce: Boolean = this == Ace
-}
+sealed abstract class Rank(val value: Int)
 case object King extends Rank(10)
 case object Queen extends Rank(10)
 case object Jack extends Rank(10)
@@ -51,7 +49,7 @@ object Deck {
 case class Hand(cards: Seq[Card]) {
   private val winningValue = 21
   val value: Int = cards.map(_.rank.value).sum
-  val containsAce: Boolean = cards.exists(_.rank.isAce)
+  val containsAce: Boolean = cards.exists(_.rank == Ace)
   val specialValue: Int = if (containsAce) value + 10 else value
   val isBlackJack: Boolean = value == winningValue || specialValue == winningValue
   val isBust: Boolean = value > winningValue
