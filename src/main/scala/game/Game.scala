@@ -29,21 +29,17 @@ case class Card(suit: Suit, rank: Rank)
 case class Deck(cards: Seq[Card]) {
   // Its impossible to deal all cards, because dealer or player would be bust before that happens
   // Therefore we use cards.head instead of cards.headOption
-  def dealCard: (Card, Deck) = {
-    val topCard = cards.head
-    (topCard, copy(cards.tail))
-  }
+  def dealCard: (Card, Deck) = (cards.head, copy(cards.tail))
 }
 
 object Deck {
-  val allCards: Seq[Card] =
-    for {
-      suit <- List(Heart, Diamond, Spade, Club)
-      rank <- List(King, Queen, Jack, Ten, Nine, Eight, Seven, Six, Five, Four, Three, Two, Ace)
-    } yield Card(suit, rank)
-
   def shuffle(shuffle: Seq[Card] => Seq[Card]): Deck =
-    Deck(shuffle(allCards))
+    Deck(shuffle(
+      for {
+        suit <- List(Heart, Diamond, Spade, Club)
+        rank <- List(King, Queen, Jack, Ten, Nine, Eight, Seven, Six, Five, Four, Three, Two, Ace)
+      } yield Card(suit, rank)
+    ))
 }
 
 case class Hand(cards: Seq[Card]) {
@@ -55,9 +51,7 @@ case class Hand(cards: Seq[Card]) {
   val isBust: Boolean = value > winningValue
   val bestValue: Int =  List(value, specialValue).filter(_ <= winningValue).maxOption.getOrElse(0)
   def winsOver(otherHand: Hand): Boolean = bestValue > otherHand.bestValue
-  def showCards (dealer: Boolean = false): String =
-    if (dealer) s"${cards.head.rank.value} X"
-    else cards.map(c => c.rank.value).mkString(", ")
+  def showCards (dealer: Boolean = false): String = if (dealer) s"${cards.head.rank.value} X" else cards.map(c => c.rank.value).mkString(", ")
   def addCard(card: Card): Hand = copy(cards = cards :+ card)
 }
 
@@ -79,11 +73,13 @@ object Game extends App {
   val randomShuffle = (cards: Seq[Card]) => Random.shuffle(cards)
   val bidSupplier = (currentCredit: Int) => {
     var bet = readInt(s"Please enter bet (credit: ${currentCredit}): ")
-    while(bet > currentCredit) {
-      bet = readInt(s"Too high. Please enter bet (credit: ${currentCredit}): ")
+    while(bet > currentCredit || bet == 0) {
+      println("Bad input. Try again")
+      bet = readInt(s"Please enter bet (credit: ${currentCredit}): ")
     }
     bet
   }
+
   println("Welcome to BlackJack. Press any key to start playing.")
   readLine("")
   gameLoop(GameState(100), randomShuffle, bidSupplier, continue, stand)

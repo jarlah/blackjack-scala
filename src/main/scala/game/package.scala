@@ -1,7 +1,9 @@
+import scala.util.Try
+
 package object game {
   def readInt(msg: String): Int = {
     print(msg)
-    scala.io.StdIn.readInt()
+    Try(scala.io.StdIn.readInt()).getOrElse(0)
   }
 
   def readLine(msg: String): String = {
