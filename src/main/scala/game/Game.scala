@@ -64,16 +64,12 @@ case class Hand(cards: Seq[Card]) {
 }
 
 object Dealer {
-  def dealHand(deck: Deck): (Hand, Deck) = {
+  def dealHands(deck: Deck): (Hand, Hand, Deck) = {
     val (firstCard, deck1) = deck.dealCard
     val (secondCard, deck2) = deck1.dealCard
-    (Hand(Seq(firstCard, secondCard)), deck2)
-  }
-
-  def dealHands(deck: Deck): (Hand, Hand, Deck) = {
-    val (firstHand, deck1) = Dealer.dealHand(deck)
-    val (secondHand, deck2) = Dealer.dealHand(deck1)
-    (firstHand, secondHand, deck2)
+    val (thirdCard, deck3) = deck2.dealCard
+    val (fourthCard, deck4) = deck3.dealCard
+    (Hand(Seq(firstCard, secondCard)), Hand(Seq(thirdCard, fourthCard)), deck4)
   }
 }
 
