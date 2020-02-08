@@ -121,26 +121,26 @@ object Game extends App {
   }
 
   def hitOrStand(playerHand: Hand, dealerHand: Hand, deck: Deck): (Hand, Hand, Deck, Boolean) = {
-    var newDeck = deck
-    var newDealerHand = dealerHand
-    var newPlayerHand = playerHand
-    var newStand = false
+    var currentDeck = deck
+    var currentDealerHand = dealerHand
+    var currentPlayerHand = playerHand
+    var currentStand = false
     showCards(playerHand, dealerHand)
     if ("s".equals(getAnswer("Hit or Stand", List("h", "s")))) {
-      newStand = true
-      while (newDealerHand.value < 17) {
-        newDeck.dealCard match {
+      currentStand = true
+      while (currentDealerHand.value < 17) {
+        currentDeck.dealCard match {
           case (card, modifiedDeck) =>
-            newDealerHand = newDealerHand.addCard(card)
-            newDeck = modifiedDeck
+            currentDealerHand = currentDealerHand.addCard(card)
+            currentDeck = modifiedDeck
         }
       }
     } else {
-      val (card, modifiedDeck) = newDeck.dealCard
-      newPlayerHand = newPlayerHand.addCard(card)
-      newDeck = modifiedDeck
+      val (card, modifiedDeck) = currentDeck.dealCard
+      currentPlayerHand = currentPlayerHand.addCard(card)
+      currentDeck = modifiedDeck
     }
-    (newPlayerHand, newDealerHand, newDeck, newStand)
+    (currentPlayerHand, currentDealerHand, currentDeck, currentStand)
   }
 
   def showCards(playerHand: Hand, dealerHand: Hand, dealer: Boolean = true): Unit = {
