@@ -117,27 +117,27 @@ object Game extends App {
     }
   }
 
+  @tailrec
+  def dealerTryToWin(dealerHand: Hand, deck: Deck): (Hand, Deck) = {
+    if (dealerHand.value >= 18) {
+      (dealerHand, deck)
+    } else {
+      deck.dealCard match {
+        case (card, modifiedDeck) =>
+          dealerTryToWin(dealerHand.addCard(card), modifiedDeck)
+      }
+    }
+  }
+
   def hitOrStand(playerHand: Hand, dealerHand: Hand, deck: Deck, shouldStand: () => Boolean): (Hand, Hand, Deck, Boolean) = {
-    var currentDeck = deck
-    var currentDealerHand = dealerHand
-    var currentPlayerHand = playerHand
-    var currentStand = false
     showCards(playerHand, dealerHand)
     if (shouldStand()) {
-      currentStand = true
-      while (currentDealerHand.value < 17) {
-        currentDeck.dealCard match {
-          case (card, modifiedDeck) =>
-            currentDealerHand = currentDealerHand.addCard(card)
-            currentDeck = modifiedDeck
-        }
-      }
+      val (newDealerHand, newDeck) = dealerTryToWin(dealerHand, deck)
+      (playerHand, newDealerHand, newDeck, true)
     } else {
-      val (card, modifiedDeck) = currentDeck.dealCard
-      currentPlayerHand = currentPlayerHand.addCard(card)
-      currentDeck = modifiedDeck
+      val (card, newDeck) = deck.dealCard
+      (playerHand.addCard(card), dealerHand, newDeck, false)
     }
-    (currentPlayerHand, currentDealerHand, currentDeck, currentStand)
   }
 
   def showCards(playerHand: Hand, dealerHand: Hand, dealer: Boolean = true): Unit = {
