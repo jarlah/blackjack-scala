@@ -96,10 +96,11 @@ object Game extends App {
     println()
     if (newState.credit > 0 && shouldContinue()) {
       gameLoop(newState, shuffleFn, bidSupplier, shouldContinue, shouldStand)
-    } else if (newState.credit <= 0)
+    } else if (newState.credit <= 0) {
       println("You have no money left")
-    else
+    } else {
       println("Exiting")
+    }
   }
 
   @tailrec
