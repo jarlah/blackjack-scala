@@ -92,8 +92,8 @@ object Game extends App {
   def gameLoop(gameState: GameState, shuffleFn: Seq[Card] => Seq[Card], bidSupplier: Int => Int, shouldContinue: () => Boolean, shouldStand: () => Boolean): Unit = {
     val deck = Deck.shuffle(shuffleFn)
     val bet = bidSupplier.apply(gameState.credit)
-    val (playerHand, dealerHand, modifiedDeck) = Dealer.dealHands(deck)
-    val playerWon = roundLoop(playerHand, dealerHand, modifiedDeck, stand = false, shouldStand)
+    val (playerHand, dealerHand, newDeck) = Dealer.dealHands(deck)
+    val playerWon = roundLoop(playerHand, dealerHand, newDeck, stand = false, shouldStand)
     val newState = gameState.copy(credit = gameState.credit + (if (playerWon) bet else -bet))
     println(s"======= Game Summary =======")
     println(s"Start-Credit: [ ${gameState.credit} ],  End-Credit: [ ${newState.credit} ]")
