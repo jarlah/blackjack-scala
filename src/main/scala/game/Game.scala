@@ -55,7 +55,7 @@ case class Hand(cards: Seq[Card]) {
   def addCard(card: Card): Hand = copy(cards = cards :+ card)
 }
 
-object Dealer {
+object Hand {
   def dealHands(deck: Deck): (Hand, Hand, Deck) = {
     val (firstCard, deck1) = deck.dealCard
     val (secondCard, deck2) = deck1.dealCard
@@ -88,7 +88,7 @@ object Game extends App {
   def gameLoop(gameState: GameState, shuffleFn: Seq[Card] => Seq[Card], bidSupplier: Int => Int, shouldContinue: () => Boolean, shouldStand: () => Boolean): Unit = {
     val deck = Deck.shuffle(shuffleFn)
     val bet = bidSupplier.apply(gameState.credit)
-    val (playerHand, dealerHand, newDeck) = Dealer.dealHands(deck)
+    val (playerHand, dealerHand, newDeck) = Hand.dealHands(deck)
     val playerWon = roundLoop(playerHand, dealerHand, newDeck, stand = false, shouldStand)
     val newState = gameState.copy(credit = gameState.credit + (if (playerWon) bet else -bet))
     println(s"======= Game Summary =======")
